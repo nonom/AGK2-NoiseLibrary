@@ -7,11 +7,11 @@ SetErrorMode(2)
 
 // set window properties
 SetWindowTitle( "Noise" )
-SetWindowSize( 1024, 768, 0 )
+SetWindowSize( 1920, 1080, 0 )
 SetWindowAllowResize( 1 ) // allow the user to resize the window
 
 // set display properties
-SetVirtualResolution( 1024, 768 ) // doesn't have to match the window
+SetVirtualResolution( 1920, 1080 ) // doesn't have to match the window
 SetOrientationAllowed( 1, 1, 1, 1 ) // allow both portrait and landscape on mobile devices
 SetSyncRate( 60, 0 ) // 30fps instead of 60 to save battery
 SetScissor( 0,0,0,0 ) // use the maximum available screen space, no black borders
@@ -131,16 +131,15 @@ function seed(seedVal)
 	endif
 	
 	for i = 0 to 255
-		v as float
 		if (i && 1) 
-			v = p[i] ^ (seedVal && 255)
+			v# = p[i] ^ (seedVal && 255)
 		else
-			v = p[i] ^ ((seedVal>>8) && 255)
+			v# = p[i] ^ ((seedVal>>8) && 255)
 		endif
-		perm[i + 256] = v
-		perm[i] = v
-		gradP[i + 256] = grad3[Floor(mod(v, 12))]
-		gradP[i] = grad3[Floor(mod(v, 12))]
+		perm[i + 256] = v#
+		perm[i] = v#
+		gradP[i + 256] = grad3[trunc(mod(v#, 12))]
+		gradP[i] = grad3[trunc(mod(v#, 12))]
 	next i
 endfunction
 
@@ -160,8 +159,9 @@ global G3 as float
 G3 = 1.0/6
 
 //Here self is the Grad Type
-function dot2(self as GradType, x as float, y as float)
-endfunction ((self.x*x) + (self.y*y))
+function dot2(self as GradType, x#, y#)
+	dot2Val# = ((self.x*x#) + (self.y*y#))
+endfunction dot2Val#
 
 //Here self is the Grad Type
 function dot3(self as GradType, x as float, y as float, z as float)
@@ -343,24 +343,28 @@ function simplex3(xin as float, yin as float, zin as float)
 	// a step of (0,1,0) in (i,j,k) means a step of (-c,1-c,-c) in (x,y,z), and
 	// a step of (0,0,1) in (i,j,k) means a step of (-c,-c,1-c) in (x,y,z), where
 	// c = 1/6.
+	
+	// Offsets for second corner
 	x1 as float
 	y1 as float
 	z1 as float
-	x1 = x0 - i1 + G3 // Offsets for second corner
+	x1 = x0 - i1 + G3
 	y1 = y0 - j1 + G3
 	z1 = z0 - k1 + G3
 
+	// Offsets for third corner
 	x2 as float
 	y2 as float
 	z2 as float
-	x2 = x0 - i2 + 2 * G3 // Offsets for third corner
+	x2 = x0 - i2 + 2 * G3
 	y2 = y0 - j2 + 2 * G3
 	z2 = z0 - k2 + 2 * G3
 	
+	// Offsets for fourth corner
 	x3 as float
 	y3 as float
 	z3 as float
-	x3 = x0 - 1 + 3 * G3 // Offsets for fourth corner
+	x3 = x0 - 1 + 3 * G3
 	y3 = y0 - 1 + 3 * G3
 	z3 = z0 - 1 + 3 * G3
 
@@ -420,96 +424,95 @@ function simplex3(xin as float, yin as float, zin as float)
 endfunction 32 * (n0 + n1 + n2 + n3)
 
 // ##### Perlin noise stuff
-function fade(t as float)
-endfunction t*t*t*(t*(t*6-15)+10)
+function fade(t#)
+	fadeVal# = t#*t#*t#*(t#*(t#*6.0-15.0)+10.0)
+endfunction fadeVal#
 
 // Function to linearly interpolate between a0 and a1
 // Weight w should be in the range [0.0, 1.0]
-function lerp(a0 as float, a1 as float, w as float)
-	lerpVal as float
-	lerpVal = ((1.0 - w) * a0) + w * a1
-endfunction lerpVal
+function lerp(a0#, a1#, w#)
+	lerpVal# = ((1.0 - w#) * a0#) + w# * a1#
+endfunction lerpVal#
 
-function perlin2(xin as float, yin as float)
+function perlin2(xin#, yin#)
 	// Find unit grid cell containing point
-	X as float
-	Y as float
-	X = floor(xin)
-	Y = floor(yin)
+	X = trunc(xin#)
+	Y = trunc(yin#)
+	
 	// Get relative xy coordinates of point within that cell
-	xin = xin - X
-	yin = yin - Y
+	xin# = xin# - X
+	yin# = yin# - Y
+	
 	// Wrap the integer cells at 255 (smaller integer period can be introduced here)
 	X = X && 255
 	Y = Y && 255
-
+	
 	// Calculate noise contributions from each of the four corners
-	n00 as float
-	n01 as float
-	n10 as float
-	n11 as float
-	n00 = dot2(gradP[floor(X+perm[floor(Y)])], xin, yin)
-	n01 = dot2(gradP[floor(X+perm[floor(Y+1)])], xin, yin-1)
-	n10 = dot2(gradP[floor(X+1+perm[floor(Y)])], xin-1, yin)
-	n11 = dot2(gradP[floor(X+1+perm[floor(Y+1)])], xin-1, yin-1)
+	n00# = dot2(gradP[trunc(X+perm[trunc(Y)])], xin#, yin#)
+	n01# = dot2(gradP[trunc(X+perm[trunc(Y+1.0)])], xin#, yin#-1.0)
+	n10# = dot2(gradP[trunc(X+1.0+perm[trunc(Y)])], xin#-1.0, yin#)
+	n11# = dot2(gradP[trunc(X+1.0+perm[trunc(Y+1.0)])], xin#-1.0, yin#-1.0)
 	
 	// Compute the fade curve value for x
-	u as float
-	u = fade(x)
+	u# = fade(xin#)
 	
 	// Interpolate the four results
-	retValue = lerp(lerp(n00, n10, u),lerp(n01, n11, u),fade(y))
-endfunction retValue
+	retValue# = lerp(lerp(n00#, n10#, u#),lerp(n01#, n11#, u#),fade(yin#))
+endfunction retValue#
 
-function perlin3(xin as float, yin as float, zin as float)
+function perlin3(xin#, yin#, zin#)
 	// Find unit grid cell containing point
-	X = floor(xin)
-	Y = floor(yin)
-	Z = floor(zin)
+	X = trunc(xin#)
+	Y = trunc(yin#)
+	Z = trunc(zin#)
+	
 	// Get relative xyz coordinates of point within that cell
-	xin = xin - X
-	yin = yin - Y
-	zin = zin - Z
+	xin# = xin# - X
+	yin# = yin# - Y
+	zin# = zin# - Z
+	
 	// Wrap the integer cells at 255 (smaller integer period can be introduced here)
 	X = X && 255
 	Y = Y && 255
 	Z = Z && 255
 	
-	// Calculate noise contributions from each of the eight corners
-	n000 as float
-	n001 as float
-	n010 as float
-	n011 as float
-	n100 as float
-	n101 as float
-	n110 as float
-	n111 as float
-	
-	n000 = dot3(gradP[floor(X+  perm[floor(Y+  perm[floor(Z  )])])], xin,   yin,     zin)
-	n001 = dot3(gradP[floor(X+  perm[floor(Y+  perm[floor(Z+1)])])], xin,   yin,   zin-1)
-	n010 = dot3(gradP[floor(X+  perm[floor(Y+1+perm[floor(Z  )])])], xin,   yin-1,   zin)
-	n011 = dot3(gradP[floor(X+  perm[floor(Y+1+perm[floor(Z+1)])])], xin,   yin-1, zin-1)
-	n100 = dot3(gradP[floor(X+1+perm[floor(Y+  perm[floor(Z  )])])], xin-1,   yin,   zin)
-	n101 = dot3(gradP[floor(X+1+perm[floor(Y+  perm[floor(Z+1)])])], xin-1,   yin, zin-1)
-	n110 = dot3(gradP[floor(X+1+perm[floor(Y+1+perm[floor(Z  )])])], xin-1, yin-1,   zin)
-	n111 = dot3(gradP[floor(X+1+perm[floor(Y+1+perm[floor(Z+1)])])], xin-1, yin-1, zin-1)
+	// Calculate noise contributions from each of the eight corners	
+	n000# = dot3(gradP[floor(X+  perm[floor(Y+  perm[floor(Z  )])])], xin#,   yin#,     zin#)
+	n001# = dot3(gradP[floor(X+  perm[floor(Y+  perm[floor(Z+1)])])], xin#,   yin#,   zin#-1)
+	n010# = dot3(gradP[floor(X+  perm[floor(Y+1+perm[floor(Z  )])])], xin#,   yin#-1,   zin#)
+	n011# = dot3(gradP[floor(X+  perm[floor(Y+1+perm[floor(Z+1)])])], xin#,   yin#-1, zin#-1)
+	n100# = dot3(gradP[floor(X+1+perm[floor(Y+  perm[floor(Z  )])])], xin#-1,   yin#,   zin#)
+	n101# = dot3(gradP[floor(X+1+perm[floor(Y+  perm[floor(Z+1)])])], xin#-1,   yin#, zin#-1)
+	n110# = dot3(gradP[floor(X+1+perm[floor(Y+1+perm[floor(Z  )])])], xin#-1, yin#-1,   zin#)
+	n111# = dot3(gradP[floor(X+1+perm[floor(Y+1+perm[floor(Z+1)])])], xin#-1, yin#-1, zin#-1)
 	
 	// Compute the fade curve value for x, y, z
-	u as float
-	v as float
-	w as float
-	
-	u = fade(x)
-	v = fade(y)
-	w = fade(z)
+	u# = fade(xin#)
+	v# = fade(yin#)
+	w# = fade(zin#)
 	
 	// Interpolate
-	retValue = lerp(lerp(lerp(n000, n100, u),lerp(n001, n101, u), w),lerp(lerp(n010, n110, u),lerp(n011, n111, u), w),v)
-endfunction retValue
+	retValue# = lerp(lerp(lerp(n000, n100, u),lerp(n001, n101, u), w),lerp(lerp(n010, n110, u),lerp(n011, n111, u), w),v)
+endfunction retValue#
 
 seed(0)
 
+emptyimage = loadimage("pix1.png") 
+for x = 0 to floor(GetScreenBoundsRight()/5)
+	for y = 0 to floor(GetScreenBoundsBottom()/5)
+		newsprite = CreateSprite(emptyimage)
+		value# = perlin2(x / 100.0, y / 100.0)
+		value# = abs(value#*256)
+		r = trunc(value#)
+		g = trunc(value#)
+		b = trunc(value#)
+		SetSpriteColor(newsprite, r,g,b,255)
+		SetSpritePosition(newsprite,x*GetSpriteWidth(newsprite),y*GetSpriteHeight(newsprite))
+	next y
+next x
+
 do
-    Print( ScreenFPS() )
+	Print( ScreenFPS() )
+	print ("Managed Sprite Count "+str(GetManagedSpriteCount()))
 	Sync()
 loop
