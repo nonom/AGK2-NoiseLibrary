@@ -168,7 +168,7 @@ function dot3(self as GradType, x as float, y as float, z as float)
 endfunction ((self.x*x) + (self.y*y) + (self.z*z))
 
 // 2D simplex noise
-function simplex2(xin, yin)
+function simplex2(xin as float, yin as float)
 	n0 as float 
 	n1 as float 
 	n2 as float// Noise contributions from the three corners
@@ -251,7 +251,7 @@ function simplex2(xin, yin)
 	// The result is scaled to return values in the interval [-1,1].
 endfunction 70 * (n0 + n1 + n2)
 
-function simplex3(xin, yin, zin)
+function simplex3(xin as float, yin as float, zin as float)
 	// Noise contributions from the four corners
 	n0 as float
 	n1 as float
@@ -343,61 +343,83 @@ function simplex3(xin, yin, zin)
 	// a step of (0,1,0) in (i,j,k) means a step of (-c,1-c,-c) in (x,y,z), and
 	// a step of (0,0,1) in (i,j,k) means a step of (-c,-c,1-c) in (x,y,z), where
 	// c = 1/6.
+	x1 as float
+	y1 as float
+	z1 as float
 	x1 = x0 - i1 + G3 // Offsets for second corner
 	y1 = y0 - j1 + G3
 	z1 = z0 - k1 + G3
 
+	x2 as float
+	y2 as float
+	z2 as float
 	x2 = x0 - i2 + 2 * G3 // Offsets for third corner
 	y2 = y0 - j2 + 2 * G3
 	z2 = z0 - k2 + 2 * G3
 	
+	x3 as float
+	y3 as float
+	z3 as float
 	x3 = x0 - 1 + 3 * G3 // Offsets for fourth corner
 	y3 = y0 - 1 + 3 * G3
 	z3 = z0 - 1 + 3 * G3
 
-    // Work out the hashed gradient indices of the four simplex corners
-    i &= 255
-    j &= 255
-    k &= 255
-    var gi0 = gradP[i+   perm[j+   perm[k   ]]]
-    var gi1 = gradP[i+i1+perm[j+j1+perm[k+k1]]]
-    var gi2 = gradP[i+i2+perm[j+j2+perm[k+k2]]]
-    var gi3 = gradP[i+ 1+perm[j+ 1+perm[k+ 1]]]
+	// Work out the hashed gradient indices of the four simplex corners
+	i = i && 255
+	j = i && 255
+	k = i && 255
+	gi0 as GradType
+	gi1 as GradType
+	gi2 as GradType
+	gi3 as GradType
 
-    // Calculate the contribution from the four corners
-    var t0 = 0.6 - x0*x0 - y0*y0 - z0*z0;
-    if(t0<0) {
-      n0 = 0;
-    } else {
-      t0 *= t0;
-      n0 = t0 * t0 * gi0.dot3(x0, y0, z0);  // (x,y) of grad3 used for 2D gradient
-    }
-    var t1 = 0.6 - x1*x1 - y1*y1 - z1*z1;
-    if(t1<0) {
-      n1 = 0;
-    } else {
-      t1 *= t1;
-      n1 = t1 * t1 * gi1.dot3(x1, y1, z1);
-    }
-    var t2 = 0.6 - x2*x2 - y2*y2 - z2*z2;
-    if(t2<0) {
-      n2 = 0;
-    } else {
-      t2 *= t2;
-      n2 = t2 * t2 * gi2.dot3(x2, y2, z2);
-    }
-    var t3 = 0.6 - x3*x3 - y3*y3 - z3*z3;
-    if(t3<0) {
-      n3 = 0;
-    } else {
-      t3 *= t3;
-      n3 = t3 * t3 * gi3.dot3(x3, y3, z3);
-    }
-    // Add contributions from each corner to get the final noise value.
-    // The result is scaled to return values in the interval [-1,1].
-    return 32 * (n0 + n1 + n2 + n3);
-
-endfunction
+	gi0 = gradP[floor(i+   perm[floor(j+   perm[floor(k   )])])]
+	gi1 = gradP[floor(i+i1+perm[floor(j+j1+perm[floor(k+k1)])])]
+	gi2 = gradP[floor(i+i2+perm[floor(j+j2+perm[floor(k+k2)])])]
+	gi3 = gradP[floor(i+ 1+perm[floor(j+ 1+perm[floor(k+ 1)])])]
+	
+	// Calculate the contribution from the four corners
+	t0 as float
+	t0 = 0.6 - (x0*x0) - (y0*y0) - (z0*z0)
+	if(t0<0)
+		n0 = 0
+	else
+		t0 = t0 * t0
+		n0 = t0 * t0 * dot3(gi0, x0, y0, z0)  // (x,y) of grad3 used for 2D gradient
+	endif
+	
+	t1 as float
+	t1 = 0.6 - (x1*x1) - (y1*y1) - (z1*z1)
+	if(t1<0)
+		n1 = 0
+	else
+		t1 = t1 * t1
+		n1 = t1 * t1 * dot3(gi1, x1, y1, z1)
+	endif
+	
+	t2 as float
+	t2 = 0.6 - (x2*x2) - (y2*y2) - (z2*z2)
+	if(t2<0)
+		n2 = 0
+	else
+		t2 = t2 * t2
+		n2 = t2 * t2 * dot3(gi2, x2, y2, z2)
+	endif
+	
+	t3 as float
+	t3 = 0.6 - (x3*x3) - (y3*y3) - (z3*z3)
+	if(t3<0)
+		n3 = 0
+	else
+		t3 = t3 * t3
+		n3 = t3 * t3 * dot3(gi3, x3, y3, z3)
+	endif
+	
+	// Add contributions from each corner to get the final noise value.
+	// The result is scaled to return values in the interval [-1,1].
+	retVal = 32 * (n0 + n1 + n2 + n3)
+	
+endfunction retVal
 
 // ##### Perlin noise stuff
 function fade(t as float)
