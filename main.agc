@@ -13,7 +13,7 @@ SetWindowAllowResize( 1 ) // allow the user to resize the window
 // set display properties
 SetVirtualResolution( 1024, 768 ) // doesn't have to match the window
 SetOrientationAllowed( 1, 1, 1, 1 ) // allow both portrait and landscape on mobile devices
-SetSyncRate( 30, 0 ) // 30fps instead of 60 to save battery
+SetSyncRate( 60, 0 ) // 30fps instead of 60 to save battery
 SetScissor( 0,0,0,0 ) // use the maximum available screen space, no black borders
 UseNewDefaultFonts( 1 ) // since version 2.0.22 we can use nicer default fonts
 
@@ -417,9 +417,7 @@ function simplex3(xin as float, yin as float, zin as float)
 	
 	// Add contributions from each corner to get the final noise value.
 	// The result is scaled to return values in the interval [-1,1].
-	retVal = 32 * (n0 + n1 + n2 + n3)
-	
-endfunction retVal
+endfunction 32 * (n0 + n1 + n2 + n3)
 
 // ##### Perlin noise stuff
 function fade(t as float)
@@ -512,23 +510,6 @@ endfunction retValue
 seed(0)
 
 do
-	Print(perm[1])
-	Print(perm[2])
-	Print(perm[3])
-	Print(perm[4])
-	Print(perm[5])
-	Print(perm[511])
-	printGrad(gradP[0])
-	printGrad(gradP[1])
-	printGrad(gradP[2])
-	printGrad(gradP[3])
-	printGrad(gradP[4])
-	printGrad(gradP[511])
-	Print(str(p[255]))
-	Print(str(p[254]))
-	Print(str(F2))
-	Print(str(G2))
-	Print(str(F3))
-	Print(str(G3))
+    Print( ScreenFPS() )
 	Sync()
 loop
